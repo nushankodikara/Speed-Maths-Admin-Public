@@ -19,6 +19,15 @@ body {
           align-items: center;
 }
 
+body h2 {
+  width: 100%;
+  max-width: 650px;
+  text-align: center;
+  background-color: white;
+  border-radius: 0.25em;
+  padding: 25px;
+}
+
 body .conDiv {
   max-width: 650px;
   width: 100%;

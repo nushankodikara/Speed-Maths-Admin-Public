@@ -96,7 +96,7 @@ function retrieveData() {
                 dis = "disabled"
             }
 
-            b.push(`<tr><td>${i}</td><td><button onclick="monitor('${i}')" class="btn btn-primary" ${dis}>Monitor</button></td><td>${ a[i]["name"] }</td><td>${ a[i]["email"] }</td><td>${ a[i]["currentAttempt"] || "Never Started" }</td><td>${lastCPS}</td><td><button onclick="massMonitor('${i}')" class="btn btn-primary" ${dis}>Add To Mass Monitor</button></td></tr>`)
+            b.push(`<tr><td>${i}</td><td><button onclick="monitor('${i}')" class="btn btn-primary" ${dis}>View</button></td><td>${ a[i]["name"] }</td><td>${ a[i]["email"] }</td><td>${ a[i]["currentAttempt"] || "Never Started" }</td><td>${lastCPS}</td><td><button onclick="massMonitor('${i}')" class="btn btn-primary" ${dis}>Add To Mass Monitor</button></td></tr>`)
         }
 
         $('#monitorTable').html(b.join(''));
@@ -229,75 +229,80 @@ function monitor(ID) {
 
 /* Mass Monitoring Mechanic */
 function massMonitor(ID) {
-    $('#massMonitoringSection').append(`<div style="margin:10px;" class="card conDiv" id="${ID}main"><h3>Statics Of <span class="${ID}statName">The User</span><a style="color:red;float:right;" onclick="$('#${ID}main').remove()"> X</a></h3><em>Average <span class="${ID}avg">0</span></em><div id="${ID}progressionChart" style="width: 100%;"></div></div>`)
-    /* Setting Name */
-    firebase.database().ref(`smat/${ID}/name/`).once('value', function (snap) {
-        $(`.${ID}statName`).html(snap.val());
-    })
-    /* Average Mark */
-    firebase.database().ref(`smat/${ID}/Attempts/`).limitToLast(100).on('value', function (snapshot) {
-        var lab = [];
-        var avg = [];
-        var lar = [];
-        var dar = [];
-        var cnt = 0;
-        /* retrieving values from database */
-        snapshot.forEach(function (childSnapshot) {
-            var childKey = childSnapshot.key;
-            var childData = childSnapshot.val();
-            lab.push(childKey)
-            avg.push(parseFloat(childData.cps));
+    if ($(`#A${ID}main`).length) {
+        alert("Already Added")
+    } else {
+        /* Bug Fix : Has to add a letter in-front of the ID when using for elements as the id (Using A here), Because sometimes there could be numbers at front ( auto generated from firebase  ) */
+        $('#massMonitoringSection').append(`<div style="margin:10px; margin-left:0px;" class="card conDiv" id="A${ID}main"><h3>Statics Of <span class="A${ID}statName">The User</span><a style="color:red;float:right;" onclick="$('#A${ID}main').remove()"> X</a></h3><em>Average <span class="A${ID}avg">0</span></em><div id="A${ID}progressionChart" style="width: 100%;"></div></div>`)
+        /* Setting Name */
+        firebase.database().ref(`smat/${ID}/name/`).once('value', function (snap) {
+            $(`.A${ID}statName`).html(snap.val());
+        })
+        /* Average Mark */
+        firebase.database().ref(`smat/${ID}/Attempts/`).limitToLast(100).on('value', function (snapshot) {
+            var lab = [];
+            var avg = [];
+            var lar = [];
+            var dar = [];
+            var cnt = 0;
+            /* retrieving values from database */
+            snapshot.forEach(function (childSnapshot) {
+                var childKey = childSnapshot.key;
+                var childData = childSnapshot.val();
+                lab.push(childKey)
+                avg.push(parseFloat(childData.cps));
+            });
+            $(`.A${ID}avg`).text(math.mean(avg).toFixed(3));
+            /* Preparing for the chart */
+            for (var i = avg.length - 1; i >= 0; i--) {
+                if (cnt == 20) {
+                    break
+                } else {
+                    lar.push(lab[i]);
+                    dar.push(avg[i]);
+                    cnt += 1;
+                }
+            }
+            lar.reverse();
+            dar.reverse();
+
+            /* Add a basic data series with six labels and values */
+            var data = {
+                labels: lar,
+                series: [{
+                    data: dar
+                }]
+            };
+
+            /* Set some base options (settings will override the default settings in Chartist.js *see default settings*). We are adding a basic label interpolation function for the xAxis labels. */
+            var options = {
+                axisX: {
+                    labelInterpolationFnc: function (value) {
+                        return 'A' + value;
+                    }
+                }
+            };
+
+            /* Now we can specify multiple responsive settings that will override the base settings based on order and if the media queries match. In this example we are changing the visibility of dots and lines as well as use different label interpolations for space reasons. */
+            var responsiveOptions = [
+                ['screen and (min-width: 641px) and (max-width: 1024px)', {
+                    showPoint: false,
+                    axisX: {
+                        labelInterpolationFnc: function (value) {
+                            return 'A' + value;
+                        }
+                    }
+                }],
+                ['screen and (max-width: 640px)', {
+                    showPoint: false,
+                    axisX: {
+                        labelInterpolationFnc: function (value) {
+                            return 'A' + value;
+                        }
+                    }
+                }]
+            ];
+            new Chartist.Line(`#A${ID}progressionChart`, data, options, responsiveOptions);
         });
-        $(`.${ID}avg`).text(math.mean(avg).toFixed(3));
-        /* Preparing for the chart */
-        for (var i = avg.length - 1; i >= 0; i--) {
-            if (cnt == 20) {
-                break
-            } else {
-                lar.push(lab[i]);
-                dar.push(avg[i]);
-                cnt += 1;
-            }
-        }
-        lar.reverse();
-        dar.reverse();
-
-        /* Add a basic data series with six labels and values */
-        var data = {
-            labels: lar,
-            series: [{
-                data: dar
-            }]
-        };
-
-        /* Set some base options (settings will override the default settings in Chartist.js *see default settings*). We are adding a basic label interpolation function for the xAxis labels. */
-        var options = {
-            axisX: {
-                labelInterpolationFnc: function (value) {
-                    return 'A' + value;
-                }
-            }
-        };
-
-        /* Now we can specify multiple responsive settings that will override the base settings based on order and if the media queries match. In this example we are changing the visibility of dots and lines as well as use different label interpolations for space reasons. */
-        var responsiveOptions = [
-            ['screen and (min-width: 641px) and (max-width: 1024px)', {
-                showPoint: false,
-                axisX: {
-                    labelInterpolationFnc: function (value) {
-                        return 'A' + value;
-                    }
-                }
-            }],
-            ['screen and (max-width: 640px)', {
-                showPoint: false,
-                axisX: {
-                    labelInterpolationFnc: function (value) {
-                        return 'A' + value;
-                    }
-                }
-            }]
-        ];
-        new Chartist.Line(`#${ID}progressionChart`, data, options, responsiveOptions);
-    });
+    }
 }

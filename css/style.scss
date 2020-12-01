@@ -11,6 +11,15 @@ body {
     gap: 10px;
     align-items: center;
 
+    h2 {
+        width: 100%;
+        max-width: 650px;
+        text-align: center;
+        background-color: white;
+        border-radius: 0.25em;
+        padding: 25px;
+    }
+
     .conDiv {
         max-width: 650px;
         width: 100%;
