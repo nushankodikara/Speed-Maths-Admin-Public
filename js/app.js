@@ -24,9 +24,7 @@ function login() {
             userObj = user;
         })
         .catch((error) => {
-            if (error.code == "auth/user-not-found") {
-                $('#signupModal').modal('show')
-            } else if (error.code == "auth/wrong-password") {
+            if (error.code == "auth/wrong-password") {
                 alert("Wrong Password. Please Check your Password again.")
             }
             $('#loginButton').html('Log In')
@@ -38,8 +36,10 @@ firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
         userObj = user;
         alogin();
+        $('#loginButton').html('Log In')
     } else {
         blogin();
+        $('#loginButton').html('Log In')
     }
 });
 
@@ -84,7 +84,7 @@ function retrieveData() {
     firebase.database().ref(`smat`).on('value', function (snapshot) {
         var a = snapshot.val();
         dataObj = a;
-        var b = [`<tr><th>ID</th><th></th><th>Name</th><th>E-Mail</th><th>Attempts</th><th>Last CPS</th><th></th></tr>`]
+        var b = [`<tr><th>ID</th><th></th><th>Name</th><th>E-Mail</th><th>Current Attempt</th><th>Last CPS</th><th></th></tr>`]
 
         for (i in a) {
             var dis;
